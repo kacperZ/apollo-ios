@@ -4,7 +4,7 @@ title: "2. Obtain your GraphQL schema"
 
 ## Explore your server's schema
 
-This tutorial uses a modified version of the GraphQL server you build as part of [the Apollo full-stack tutorial](https://www.apollographql.com/docs/tutorial/introduction/). You can visit [`https://n1kqy.sse.codesandbox.io/`](https://n1kqy.sse.codesandbox.io/) to start it up and open the GraphiQL tool to explore its schema:
+This tutorial uses a modified version of the GraphQL server you build as part of [the Apollo full-stack tutorial](https://www.apollographql.com/docs/tutorial/introduction/). You can visit [`https://apollo-fullstack-tutorial.herokuapp.com/`](https://apollo-fullstack-tutorial.herokuapp.com/) to start it up and open the GraphiQL tool to explore its schema:
 
 ![the GraphiQL query explorer](images/graphiql.png)
 
@@ -46,7 +46,7 @@ To use the Apollo CLI from Xcode, add a **Run Script** build phase to your app:
 7. Before the script can generate code, it needs a local copy of your GraphQL server's schema. For now, **comment out the last line** of the script you pasted and add the following line below it:
 
     ```sh
-    "${SCRIPT_PATH}"/run-bundled-codegen.sh schema:download --endpoint="https://n1kqy.sse.codesandbox.io/"
+    "${SCRIPT_PATH}"/run-bundled-codegen.sh schema:download --endpoint="https://apollo-fullstack-tutorial.herokuapp.com/"
     ```
 
     This line runs the Apollo CLI's `schema:download` command, which downloads the schema to a `schema.json` file at the same level of your project as the `AppDelegate.swift` file.
