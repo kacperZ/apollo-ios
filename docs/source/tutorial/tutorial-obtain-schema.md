@@ -33,9 +33,7 @@ To use the Apollo CLI from Xcode, add a **Run Script** build phase to your app:
 
     This adds a new Run Script build phase to the bottom of your list of build phases.
     
-4. Drag the newly created phase up between "Dependencies" and "Compile Sources":
-
-    ![where to drag the run script](images/drag_run_script.png)
+4. Drag the newly created phase up between "Dependencies" and "Compile Sources".
 
 5. Double-click the name of the build phase to rename it to **Apollo CLI**:
 
