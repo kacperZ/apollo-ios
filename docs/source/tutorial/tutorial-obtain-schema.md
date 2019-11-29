@@ -41,7 +41,7 @@ To use the Apollo CLI from Xcode, add a **Run Script** build phase to your app:
 
 6. Expand the Apollo CLI phase. Paste the **Swift Package Manager Run Script** from [Adding a code generation build step](/installation/#adding-a-code-generation-build-step) into the text area. This script uses your schema to generate the code that the Apollo iOS SDK uses to interact with your server.
 
-7. Before the script can generate code, it needs a local copy of your GraphQL server's schema. For now, **comment out the last line** of the script you pasted and add the following line below it:
+7. Before the script can generate code, it needs a local copy of your GraphQL server's schema. For now, **comment out the last line** of the script you pasted with a `#`, and add the following line below it:
 
     ```sh
     "${SCRIPT_PATH}"/run-bundled-codegen.sh schema:download --endpoint="https://apollo-fullstack-tutorial.herokuapp.com/"

@@ -79,9 +79,9 @@ You're now ready to generate code from the combination of your saved query and s
 
 ## Running code generation
 
-1. Return to your project's **Apollo CLI** Run Script build phase. Comment out the line that you added to the bottom (that includes `schema:download`). The schema isn't changing between builds, which means you don't need to refetch it.
+1. Return to your project's **Apollo CLI** Run Script build phase. Comment out the line that you added to the bottom (that includes `schema:download`) with a `#`. The schema isn't changing between builds, which means you don't need to refetch it.
 
-2. _Uncomment_ the line you previously commented out (that includes `codegen:generate`).
+2. _Uncomment_ the line you previously commented out (that includes `codegen:generate`) by removing the `#`.
 
 3. Build your project. When the build completes, an `API.swift` file appears in the same folder  as `schema.json`.
 
@@ -91,9 +91,9 @@ You're now ready to generate code from the combination of your saved query and s
 
 Open the `API.swift` file. It defines a root class, `LaunchListQuery`, with many nested structs below it. If you compare the structs to the JSON data returned in GraphiQL, you see that the structure matches. These structs include properties only for the fields that your query requests. 
 
-Try commenting out the `id` property in `LaunchList.graphql`, saving, then building again. When the build completes, the innermost `Launch` now only includes the built-in `__typename` and the requested `site` property. 
+Try commenting out the `id` property in `LaunchList.graphql` with a `#`, saving, then building again. When the build completes, the innermost `Launch` now only includes the built-in `__typename` and the requested `site` property. 
 
-Uncomment `id` and rebuild to restore the property.
+Uncomment `id` by removing the `#`, and rebuild to restore the property.
 
 Now that you've generated code and had a chance to see what's in there, it's time to get everything working end to end!
 
