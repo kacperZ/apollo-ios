@@ -2,6 +2,10 @@
 title: "0. Introduction"
 ---
 
+## 🚧 Work In Progress 🚧
+
+> NOTE! This tutorial is still under construction, so particularly when you get to the end of the current completed bits, things may sputter out a little bit. We'll be making an official announcement and removing this section when the tutorial is completed.
+
 Welcome! This tutorial demonstrates adding the Apollo iOS SDK to an app to communicate with a GraphQL server. It was prepared with the following tools:
 
 - Xcode 11.2
@@ -20,11 +24,11 @@ This tutorial takes you through building an app to "book a seat" on any of the r
 * Code generation
 * Queries and mutations
 * Error handling
-* Query watching
-* Subscriptions
-* File uploads
+* File uploads [_coming soon_]
+* Query watching [_coming soon_]
+* Subscriptions [_coming soon_]
 
-A pre-built GraphQL server is provided for your app to execute operations against.
+A pre-built GraphQL server is provided for your app to execute operations against at [`https://apollo-fullstack-tutorial.herokuapp.com/`](https://apollo-fullstack-tutorial.herokuapp.com/).
 
 ## Ready to start?
 
