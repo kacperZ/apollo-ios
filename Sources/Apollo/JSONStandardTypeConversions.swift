@@ -106,7 +106,7 @@ extension Optional: JSONEncodable {
     case .some(let wrapped as JSONEncodable):
       return wrapped.jsonValue
     default:
-      fatalError("Optional is only JSONEncodable if Wrapped is")
+        return NSNull()
     }
   }
 }
