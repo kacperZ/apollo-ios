@@ -38,7 +38,7 @@ You can install `Apollo.framework` into your project using any of the three majo
 
 You'll have to copy or [download a schema](/downloading-schema/) to your target's directory before generating code.
 
-Apollo iOS requires a GraphQL schema file as input to the code generation process. A schema file is a JSON file that contains the results of an an introspection query. Conventionally this file is called `schema.json`.
+Apollo iOS requires a GraphQL schema file as input to the code generation process. A schema file is a JSON file that contains the results of an introspection query. Conventionally this file is called `schema.json`.
 
 Note that you need to add this in the folder where most of your code is, NOT in the same folder where the `.xcodeproj` and/or `.xcworkspace` are located. Here is a rough ASCII representation of what this should look like: 
 
@@ -58,22 +58,7 @@ Note that you need to add this in the folder where most of your code is, NOT in 
 
 ## [Optional] Installing the Xcode add-ons to get syntax highlighting
 
-1. Clone the [`xcode-apollo` repository](https://github.com/apollostack/xcode-apollo) to your computer.
-1. Close Xcode if it is currently running.
-1. You may need to create these folders inside of `~/Library/Developer/Xcode`:
-
- `mkdir ~/Library/Developer/Xcode/Plug-ins ~/Library/Developer/Xcode/Specifications`
-
-1. Copy `GraphQL.ideplugin` to `~/Library/Developer/Xcode/Plug-ins`.
-
- `cp -R GraphQL.ideplugin ~/Library/Developer/Xcode/Plug-ins`
-
-1. Copy `GraphQL.xclangspec` to `~/Library/Developer/Xcode/Specifications`.
-
- `cp -R GraphQL.xclangspec ~/Library/Developer/Xcode/Specifications`
-
-You may receive a warning the first time you start up Xcode after installing these add-ons - once you agree to load the plugin, you will no longer see this warning. 
-
+Check out[`xcode-apollo`](https://github.com/apollographql/xcode-graphql) the repository and follow the [installation guide](https://github.com/apollographql/xcode-graphql#installation).
 
 ## Creating `.graphql` files with your queries or mutations
 
@@ -90,6 +75,8 @@ If you have the Xcode add-ons installed, you can use the Xcode companion view to
 Code generation uses your `.graphql` files to generate API code that will help you send queries, subscriptions, and mutations, as well as parse and cache responses. To run code generation as part of the Xcode build process, you need to create a build step that runs before "Compile Sources" to invoke a wrapper script. 
 
 The wrapper will call through to the included binaries and files that constitute the `apollo` command-line interface. This ensures that you can use our tooling without having to worry about NPM Version Hell™, and that the version of the framework you're using is compatible with the version of the codegen you're using.
+
+> 🎉 NEW SHINY ALERT 🎉 : Instead of writing the rest of this in Bash, try using our new [Swift Scripting Library](./swift-scripting), now in Beta! It supports downloading a schema and generating code. 
 
 The location of this wrapper script is slightly different based on how you've integrated Apollo into your project, but the first steps are the same everywhere: 
 
@@ -123,7 +110,9 @@ If you get this error:
 
 > No operations or fragments found to generate code for.
 
-If you don't have any `.graphql` files in your build tree, and you need to create at least `.graphql` file with a valid query. If you need to validate the structure of your query, please use [the GraphQL Formatter tool](http://toolbox.sangria-graphql.org/format).
+If you don't have any `.graphql` files in your build tree, and you need to create at least `.graphql` file with a valid query. 
+
+If you need to validate the structure of your query, please use the [GraphiQL](https://github.com/graphql/graphiql) instance provided by your API, which will show errors if your query is invalid. If you don't have access to a GraphiQL instance, you can use [Prettier.io's playground](https://prettier.io/playground/) to format arbitrary GraphQL queries by clicking "Show Options" and selecting the GraphQL parser from the "Global" drop-down.
 
 ## Adding the generated API file to your target
 

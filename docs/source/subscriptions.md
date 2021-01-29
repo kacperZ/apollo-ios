@@ -15,7 +15,7 @@ Once those operations are generated, you can use an instance of `ApolloClient` u
 There are two different classes which conform to the [`NetworkTransport` protocol](api/Apollo/protocols/NetworkTransport/) within the `ApolloWebSocket` library: 
 
 - **`WebSocketTransport`** sends all operations over a web socket. 
-- **`SplitNetworkTransport`** hangs onto both a [`WebSocketTransport`](api/ApolloWebSocket/classes/WebSocketTransport/) instance and an [`UploadingNetworkTransport`](api/Apollo/protocols/UploadingNetworkTransport/) instance (usually [`HTTPNetworkTransport`](api/Apollo/classes/HTTPNetworkTransport/)) in order to create a single network transport that can use http for queries and mutations, and web sockets for subscriptions. 
+- **`SplitNetworkTransport`** hangs onto both a [`WebSocketTransport`](api/ApolloWebSocket/classes/WebSocketTransport/) instance and an [`UploadingNetworkTransport`](api/Apollo/protocols/UploadingNetworkTransport/) instance (usually [`RequestChainNetworkTransport`](api/Apollo/classes/RequestChainNetworkTransport/)) in order to create a single network transport that can use http for queries and mutations, and web sockets for subscriptions. 
 
 Typically, you'll want to use `SplitNetworkTransport`, since this allows you to retain the single `NetworkTransport` setup and avoids any potential issues of using multiple client objects. 
 
@@ -41,15 +41,15 @@ class Apollo {
   }()
   
   /// An HTTP transport to use for queries and mutations
-  private lazy var httpTransport: HTTPNetworkTransport = {
+  private lazy var normalTransport: RequestChainNetworkTransport = {
     let url = URL(string: "http://localhost:8080/graphql")!
-    return HTTPNetworkTransport(url: url)
+    return RequestChainNetworkTransport(interceptorProvider: LegacyInterceptorProvider(), endpointURL: url)
   }()
 
-  /// A split network transport to allow the use of both of the above 
+  /// A split network transport to allow the use of both of the above
   /// transports through a single `NetworkTransport` instance.
   private lazy var splitNetworkTransport = SplitNetworkTransport(
-    httpNetworkTransport: self.httpTransport, 
+    uploadingNetworkTransport: self.normalTransport,
     webSocketNetworkTransport: self.webSocketTransport
   )
 
@@ -163,15 +163,15 @@ class Apollo {
   }()
   
   /// An HTTP transport to use for queries and mutations.
-  private lazy var httpTransport: HTTPNetworkTransport = {
+  private lazy var normalTransport: RequestChainNetworkTransport = {
     let url = URL(string: "http://localhost:8080/graphql")!
-    return HTTPNetworkTransport(url: url)
+    return RequestChainNetworkTransport(interceptorProvider: LegacyInterceptorProvider(), endpointURL: url)
   }()
 
-  /// A split network transport to allow the use of both of the above 
+  /// A split network transport to allow the use of both of the above
   /// transports through a single `NetworkTransport` instance.
   private lazy var splitNetworkTransport = SplitNetworkTransport(
-    httpNetworkTransport: self.httpTransport, 
+    uploadingNetworkTransport: self.normalTransport,
     webSocketNetworkTransport: self.webSocketTransport
   )
 

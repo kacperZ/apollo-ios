@@ -1,13 +1,257 @@
 # Change log
 
+## v0.40.0
+- **BREAKING**: Dropped support for iOS/tvOS < 12, watchOS < 5, and macOS < 10.14. This also involved removing a couple of public functions that were workarounds for support for lower versions. ([#1605](https://github.com/apollographql/apollo-ios/pull/1605))
+- Updated the typescript CLI to version `2.32.1`. There may be some structural changes to generated code but it should not actually break anything. Please file bugs immediately if it does. ([#1618](https://github.com/apollographql/apollo-ios/pull/1618))
+
+## v0.39.0
+
+- **POSSIBLY BREAKING**: Updated `swift-tools` version to 5.3, and added a fallback version of `Package.swift` for 5.2. ([#1584](https://github.com/apollographql/apollo-ios/pull/1584))
+- **BREAKING**, technically: Switched `cachePolicy` to a `var` on `HTTPRequest`. This makes it possible for retries to use a different cache policy, such as when an error has occurred at the network level and you want to fall back to showing what's in the cache without retrying the network call. ([#1569](https://github.com/apollographql/apollo-ios/pull/1569))
+- Added validation in Swift Codegen wrapper that a URL passed in for `singleFile` code generation is a `.swift` file and a URL passed in for `multipleFiles` code generation is a folder. ([#1580](https://github.com/apollographql/apollo-ios/pull/1580))
+
+## v0.38.3
+- Fixes an issue that could cause callbacks to fail if a `retry` was performed in an `additionalErrorInterceptor`. ([#1563](https://github.com/apollographql/apollo-ios/pull/1563))
+
+## v0.38.2
+
+- Updates a dependency used for Experimental Swift Codegen to use a version to fix an issue with resolution failures 
+
+## v0.38.1
+
+- Updates `apollo-tooling` version to include a bugfix there. ([#1554](https://github.com/apollographql/apollo-ios/pull/1554))
+
+## v0.38.0
+
+- **BREAKING**: We've made some significant (~4x) performance improvements to the cache and eliminated _all_ our known Thread Sanitizer issues by removing some overly agressive multithreading and our internal Promises implementation. ([#1531](https://github.com/apollographql/apollo-ios/pull/1531)) Related Changes: 
+    - **POSSIBLY BREAKING**: These improvements caused changes in our `NormalizedCache` and `ApolloClientProtocol` protocols, so if you're implementing these yourself, you'll need to update. 
+    - **BREAKING**: Removed the `loadRecords(forKeys:)` method on `ReadTransaction`. We'd recommended that you use either `read` or `readObject` with the transaction, but if you were using `loadRecords`, you will need to shift to those other methds.
+    - **NEW**: `ApolloStore`'s `load(query:resultHandler:)` method now also takes an optional callback queue. 
+- **NEW**: Added the ability to say whether the results from a mutation should be published to the store are not. This is a boolean value which defeaults to `true`, to match existing behavior. ([#1521](https://github.com/apollographql/apollo-ios/pull/1521))
+- **BREAKING**: The setter for `Atomic`'s `value` is no longer public to prevent accidental misuse. If you were using this, use the `mutate` method instead to ensure the thread lock works properly. ([#1538](https://github.com/apollographql/apollo-ios/pull/1538))
+
+## v0.37.0
+
+- **POSSIBLY BREAKING**: Updated behavior of `URLSessionClient` when it's been invalidated to throw an error instead of crashing. If you were relying on this failing loudly before, please be aware it's going to fail a lot more quietly now. ([#1489](https://github.com/apollographql/apollo-ios/pull/1489))
+- Improved performance of `loadRecords` for the SQLite cache. ([#1519](https://github.com/apollographql/apollo-ios/pull/1519))
+- Added support for use of `Apollo` as a dynamic lib. ([#1483](https://github.com/apollographql/apollo-ios/pull/1483))
+- Updated the legacy CLI to `2.31.0`. ([#1510](https://github.com/apollographql/apollo-ios/pull/1510))
+- Fixed some bugs in our `JSONSerialization` handling. ([#1478](https://github.com/apollographql/apollo-ios/pull/1478))
+- Fixed an issue with callback queue handling for websockets. ([#1507](https://github.com/apollographql/apollo-ios/pull/1507))
+- Fixed an issue with callback queue handling for errors. ([#1468](https://github.com/apollographql/apollo-ios/pull/1468))
+- Removed a redundant `nil` check while clearing the cache. ([#1508](https://github.com/apollographql/apollo-ios/pull/1508))
+
+## v0.36.0
+- **POSSIBLY BREAKING**: We removed some default parameters for the `ApolloStore` from `ApolloClient` and `LegacyInterceptorProvider` to prevent an issue where developers could accidentally create these objects with different caches. ([#1461](https://github.com/apollographql/apollo-ios/pull/1461))
+- Added a new parameter to allow the option to not automatically connect a websocket on initialization. ([#1458](https://github.com/apollographql/apollo-ios/pull/1458))
+
+## v0.35.0
+- **BREAKING**: Removed the now-unused-in-the-SDK `GraphQLHTTPResponseError` type. If you were relying on this class, please copy it out of v0.34.1. ([#1437](https://github.com/apollographql/apollo-ios/pull/1437))
+- **BREAKING**: Removed default parameters from `RequestBodyCreator`'s default implementation to fix an issue where when default parameters were passed, the compiler would always select the default implementation even if a full alternate implementation was provided. ([#1450](https://github.com/apollographql/apollo-ios/pull/1450))
+- Removed unnecessary manual task clearing when invalidating a URLSession. ([#1443](https://github.com/apollographql/apollo-ios/pull/1443))
+
+## v0.34.1
+
+- Fixes an issue that would cause headers to get lost when sending with `useGETForQueries`. ([#1420](https://github.com/apollographql/apollo-ios/pull/1420))
+
+## v0.34.0
+
+- **SPECTACULARLY BREAKING**: As noted in the Beta release notes below, the networking stack for HTTP requests has been completely rewritten. This is described in great detail in the [RFC for the networking changes](https://github.com/apollographql/apollo-ios/issues/1340), as well as the [updated documentation for Advanced Client Creation](https://www.apollographql.com/docs/ios/initialization/#advanced-client-creation) and the [updated tutorial section on setting up authentication](https://www.apollographql.com/docs/ios/tutorial/tutorial-mutations/). Thank you all for the excellent feedback and looking forward to hearing about the cool stuff you're able to build with this! ([#1386](https://github.com/apollographql/apollo-ios/pull/1386)) 
+- **REMINDER**: If you're using Carthage with Xcode 12, please make sure you're using the workaround script as outlined in the [release notes for `0.33.0`](#v0330).
+
+## v0.34.0-rc.2
+
+Networking Stack, Release Candidate
+
+- Made `RequestChainNetworkTransport` subclassable and changed two methods to be `open` so they can be subclassed in order to facilitate using subclasses of `HTTPRequest` when needed. ([#1405](https://github.com/apollographql/apollo-ios/pull/1405))
+- Made numerous improvements to creating upload requests - all upload request setup is now happening through the `UploadRequest` class, which is now `open` for your subclassing funtimes. ([#1405](https://github.com/apollographql/apollo-ios/pull/1405))
+- Renamed `RequestCreator` to `RequestBodyCreator` to more accurately reflect what it's doing (particularly in light of the fact that we didn't have a `Request` in the old networking stack, and now we do), and renamed associated properties and parameters. ([#1405](https://github.com/apollographql/apollo-ios/pull/1405))
+
+## v0.34.0-rc.1
+
+Networking Stack, Release Candidate
+
+- Added some final tweaks: 
+    - Updated `ApolloStore` to take a default cache of the `InMemoryNormalizedCache`.
+    - Updated LegacyInterceptorProvider to take a default store of the `ApolloStore` with that default cache.
+    - Added a method to `InterceptorProvider` to provide an error interceptor, along with a default implementation that returns `nil`.
+    - Updated `JSONRequest` to be open so it can be subclassed.
+
+    This is now at the point where if there are no further major bugs, I'd like to release this - get your bugs in ASAP! ([#1399](https://github.com/apollographql/apollo-ios/pull/1399)
+
+## v0.34.0-beta2
+
+Networking Stack, Beta 2
+
+- Merges `0.33.0` changes into the networking stack for Swift 5.3 and Xcode 12.
+
+## v0.33.0
+- Adds support for Xcode 12 and Swift 5.3. ([#1280](https://github.com/apollographql/apollo-ios/pull/1280))
+- Adds workaround script for Carthage support in Xcode 12. Please see [Carthage-3019](https://github.com/Carthage/Carthage/issues/3019) for details. TL;DR: cd into `[YourProject]/Carthage/Checkouts/apollo-ios/scripts` and then run `./carthage-build-workaround.sh` to actually get Carthage builds that work. (#yolo committed to `main`)
+
+### 0.33.0-beta1
+
+Networking Stack, Beta 1
+
+- **SPECTACULARLY BREAKING**: The networking stack for HTTP requests has been completely rewritten. This is described in great detail in the [RFC for the networking changes](https://github.com/apollographql/apollo-ios/issues/1340), as well as the [updated documentation for Advanced Client Creation](https://deploy-preview-1386--apollo-ios-docs.netlify.app/docs/ios/initialization/#advanced-client-creation). Please, please, please file bugs or requests for clarification of the docs as soon as possible. Note that all changes until the networking stack comes out of beta will live on the `betas/networking-stack` branch. ([#1341](https://github.com/apollographql/apollo-ios/issues/1341))
+
+## v0.32.1
+- Improves invalidation of a `URLSesionClient` to include cancellation of in-flight operations. ([#1376](https://github.com/apollographql/apollo-ios/issues/1376))
+
+## v0.32.0
+- Fixes an issue that would occur when a GraphQL query watcher's dependent keys would not get updated. ([#1375](https://github.com/apollographql/apollo-ios/issues/1375))
+- Adds an `extensions` dictionary property to `GraphQLResult`. ([#1370](https://github.com/apollographql/apollo-ios/pull/1370))
+- Makes a couple of response parsing helpers public for advanced use cases. ([#1372](https://github.com/apollographql/apollo-ios/pull/1372))
+
+## v0.31.0
+- Adds the ability to pause and resume a WebSocket connection without dumping existing subscriptions. ([#1335](https://github.com/apollographql/apollo-ios/pull/1335)) 
+- Adds an initializer to `SQLiteNormalizedCache` that takes a `SQLite.swift` `DatabaseConnection` to more easily allow setup of pre-configured connections. ([#1330](https://github.com/apollographql/apollo-ios/pull/1330))
+- Addresses a retain cycle that could cause memory leaks when using multiple instances of `HTTPNetworkTransport`.
+
+    **NOTE:** If you're using `URLSessionClient` outside the context of `HTTPNetworkTransport`, make sure to call `invalidate()` on it when whatever is holding onto it hits `deinit()` to prevent leaks. ([#1366](https://github.com/apollographql/apollo-ios/pull/1366))
+
+## v0.30.0
+- **BREAKING**: Updates the CLI to `2.30.1` to fix a long-standing issue where when generating operation IDs and their related JSON file, the correct operations + fragments would be used in generating the operation ID, but not output with the JSON file. This will slightly change the output in `API.swift`, but it also means we can remove a related workaround from the iOS SDK. ([#1316](https://github.com/apollographql/apollo-ios/pull/1316))
+- **BREAKING**: Removed the `Cartfile` which declared our dependencies, since we're now internally managing them with SPM, and newer versions of Carthage just use the SPM dependencies. Note that this can cause issues if you need to use a fork of dependencies, or if you're using an older version of Carthage. ([#1311](https://github.com/apollographql/apollo-ios/pull/1311))
+- **POSSIBLY BREAKING**: Works around an issue that could cause some attempts to store untyped JSON dictionaries to throw unexpected errors about optional encoding. This also added handling of creating a dictionary from a `JSONValue`, which may cause problems if you've already implemented this yourself, but which should mostly just replace the need to implement it yourself. Please file issues ASAP if you run into problems here. ([#1317](https://github.com/apollographql/apollo-ios/pull/1317))
+- Works around an issue causing some attempts to store arrays of JSON dictionaries to have arbitrary key ordering. ([#1281](https://github.com/apollographql/apollo-ios/pull/1281))
+- Adds clearer error descriptions to a few errors. ([#1295](https://github.com/apollographql/apollo-ios/pull/1295))
+
+## v0.29.1
+- Updates the CLI to `2.28.3` to fix an issue where linter failures would cause a silent failure exit. ([#1284](https://github.com/apollographql/apollo-ios/pull/1284), #1288](https://github.com/apollographql/apollo-ios/pull/1288))
+- Adds a check to swift scripting that the downloaded file has the correct SHASUM, otherwise forcing redownload. ([#1288](https://github.com/apollographql/apollo-ios/pull/1288))
+
+## v0.29.0
+
+- **NEW**: Swift scripting is officially out of Beta! Please check out [our updated guide to integration](https://www.apollographql.com/docs/ios/swift-scripting/). The tutorial should be updated to recommend using Swift Scripting within the next week or so. NOTE: The shell script is not deprecated yet, but will be shortly. ([#1263](https://github.com/apollographql/apollo-ios/pull/1263))
+- **BREAKING**: Found some workarounds to conditional conformance and updated all extensions to use the `apollo.extensionMethod` syntax introduced in `0.28.0`. ([#1256](https://github.com/apollographql/apollo-ios/pull/1256))
+- **BREAKING**: Moved a few things into the new `ApolloCore` library. For CocoaPods and SPM users, this should be automatically picked up by your package manager. **Carthage users, you will need to drag the new `ApolloCore` library into  your project manually** as you have with the other Apollo libs. ([https://github.com/apollographql/apollo-ios/pull/1256](https://github.com/apollographql/apollo-ios/pull/1256))
+- **BREAKING**: Updated to version `2.28.0` of the Apollo JS CLI. This includes moving a bunch of `static let` allocations to computed `static var`s to prevent memory overuse. ([#1246](https://github.com/apollographql/apollo-ios/pull/1246))
+- Made `GraphQLGetTransformer` and its methods public and made a couple more methods on `MultipartFormData` public. ([#1273](https://github.com/apollographql/apollo-ios/pull/1273))
+- Fixes an issue when uploading multiple files for different variables. ([#1279](https://github.com/apollographql/apollo-ios/pull/1279), special thanks to [#1081](https://github.com/apollographql/apollo-ios/pull/1081))
+- Fixes a crash when encoding `GraphQLVariable` objects which conform to `JSONEncodable`. ([#1262](https://github.com/apollographql/apollo-ios/pull/1262))
+
+## v0.28.0
+- **BREAKING**: Changed a few things in the `ApolloCodegen` library to use `object.apollo.extensionMethod` syntax rather than `object.apollo_extensionMethod`. There's a few things that are still using `apollo_` notation due to constraints around conditional conformance, but you should particularly check your swift scripts for changes around `FileManager` APIs. ([#1183](https://github.com/apollographql/apollo-ios/pull/1183))
+- **BREAKING**: `NormalizedCache` now has a method for explicitly clearing the cache synchronously, in addition to the existing method to clear it asynchronously. If you've got a custom `NormalizedCache` implementation, you'll need to add an implementation for this method. ([#1186](https://github.com/apollographql/apollo-ios/pull/1186))
+- Fixed race conditions in `URLSessionClient` that were causing unexpected behavior. Turns out concurrency is hard! ([#1227](https://github.com/apollographql/apollo-ios/pull/1227))
+- Improved handling of a dependent key update cancelling an in-flight server fetch on a watcher. ([#1156](https://github.com/apollographql/apollo-ios/pull/1156))
+- Added option to Swift Codegen to pass in a prefix for custom scalars. ([#1216](https://github.com/apollographql/apollo-ios/pull/1216))
+- Added ability to change a header on a websocket connection and automatically reconnect. ([#1224](https://github.com/apollographql/apollo-ios/pull/1224))
+
+## v0.27.1
+- Better defense against multithreading crashes in `URLSessionClient`. ([#1184](https://github.com/apollographql/apollo-ios/pull/1184))
+- Fix for watchOS availability for `URLSessionClient`. ([#1175](https://github.com/apollographql/apollo-ios/pull/1175))
+
+## v0.27.0
+- **BREAKING**: Replaced calls directly into the closure based implementation of `URLSession` with a delegate-based implementation called `URLSessionClient`. 
+    - This (finally) allows background session configurations to be used with `ApolloClient`, since background session configurations immediately error out if you try to use the closure-based `URLSession` API. 
+    - **This makes a significant change to the initialization of `HTTPNetworkTransport` if you're using a custom `URLSession`**: Because `URLSession` must have its delegate set at the point of creation, `URLSessionClient` is now creating the URL session. You can initialize a `URLSessionClient` with a `URLSessionConfiguration`. if before you were using:
+
+        ```swift
+        let session = URLSession(configuration: myCustomConfiguration)
+        let url = URL(string: "http://localhost:8080/graphql")!
+        let transport = HTTPNetworkTransport(url: url,
+                                             session: session)
+        ```
+        
+        You will now need to use: 
+        
+        ```swift
+        let client = URLSessionClient(sessionConfiguration: myCustomConfiguration)
+        let url = URL(string: "http://localhost:8080/graphql")!
+        let transport = HTTPNetworkTransport(url: url,
+                                             client: client)
+        ```
+        
+    - If you were passing in a session you'd already set yourself up to be the delegate of to handle GraphQL requests, you'll need to subclass `URLSessionClient`  and override any delegate methods off of `URLSessionDelegate`, `URLSessionTaskDelegate`, or `URLSessionDataDelegate` you need to handle. Unfortunately only one class can be a delegate at a time, and that class must be declared when the session is instantiated. 
+
+        Note that if you don't need your existing delegate-based session to do any handling for things touched by Apollo, you can keep it completely separate if you'd prefer.
+    - This does *not* change anything at the point of calls - everything is still closure-based in the end
+   
+      Please file bugs on this ASAP if you run into problems. Thank you! ([#1163](https://github.com/apollographql/apollo-ios/pull/1163))
+
+
+## v0.26.0
+- **BREAKING**, though in a good way: Updated the typescript CLI to [2.27.2](https://github.com/apollographql/apollo-tooling/releases/tag/apollo%402.27.2), and updated the script to pull from a CDN (currently backed by GitHub Releases) rather than old Circle images. This should significantly increase download performance and stability. ([#1166](https://github.com/apollographql/apollo-ios/pull/1166))
+- **BREAKING**: Updated the retry delegate to allow more fine-grained control of what error to return if an operation fails in the process of retrying. ([#1128](https://github.com/apollographql/apollo-ios/pull/1128), [#1167](https://github.com/apollographql/apollo-ios/pull/1167))
+- Added support to the Swift scripting package to be able to use multiple headers when downloading a schema. ([#1153](https://github.com/apollographql/apollo-ios/pull/1153))
+- Added the ability to set the SSL trust validator on a websocket. ([#1124](https://github.com/apollographql/apollo-ios/pull/1124))
+- Fixed an issue deserializing custom scalars in `ApolloSQLite`. ([#1144](https://github.com/apollographql/apollo-ios/pull/1144))
+
+## v0.25.1
+
+- Repoints download link to our CDN for the CLI for people on 0.25.0 who can't upgrade to 0.26.0 or higher immediately.
+
+## v0.25.0
+- **BREAKING**: Updated the `swift-tools` version to 5.2 in `Package.swift`. Note that if you're using `swift-tools` 5.2, you'll need to update the syntax of your `Package.swift` file and specify the name of the library manually for Apollo. ([#1099](https://github.com/apollographql/apollo-ios/pull/1099), [#1106](https://github.com/apollographql/apollo-ios/pull/1106))
+- **POSSIBLY BREAKING**: Upgraded the typescript CLI to [2.26.0](https://github.com/apollographql/apollo-tooling/releases/tag/apollo%402.26.0). No changes were found in test frameworks, but this could theoretically break some stuff. ([#1107](https://github.com/apollographql/apollo-ios/pull/1107), [#1113](https://github.com/apollographql/apollo-ios/pull/1113))
+- **NEW**: Added the ability to set Starscream's underlying `enableSOCKSProxy` to better allow debugging web sockets in tools like Charles Proxy. ([#1108](https://github.com/apollographql/apollo-ios/pull/1108))
+- Fixed several issues using paths with spaces in the Swift Codegen. ([#1092](https://github.com/apollographql/apollo-ios/pull/1092), [#1097](https://github.com/apollographql/apollo-ios/pull/1097)). 
+- `ApolloCodegenLib` is now properly passing the `header` argument last when downloading a schema. ([#1096](https://github.com/apollographql/apollo-ios/pull/1096))
+- Automatic Persisted Queries now also work with mutations. ([#1110](https://github.com/apollographql/apollo-ios/pull/1110))
+
+## v0.24.1
+- Repoints download link to our CDN for the CLI for people on 0.24.0 who can't upgrade to 0.26.0 or higher immediately.
+
+## v0.24.0
+- **BREAKING**: Updated `GraphQLResponse` to be generic over the response type rather than the operation type. This will allow more flexibility for generic modifications to methods that need to use `GraphQLResponse`. ([#1061](https://github.com/apollographql/apollo-ios/pull/1061))
+- **BREAKING**: Updated the file URL-based initializer of `GraphQL` to throw with a clear error instead of failing silently. Removed the ability to pass in an input stream since that can't be recreated on a failure. Updated initializers take either raw `Data` or a file URL so that the input stream can be recreated on a retry. ([#1086](https://github.com/apollographql/apollo-ios/pull/1086), [#1089](https://github.com/apollographql/apollo-ios/pull/1089))
+- In the Swift Package Manager based codegen, made sure that the folder the CLI will be downloaded to is created if it doesn't exist. ([#1069](https://github.com/apollographql/apollo-ios/pull/1069))
+
+## v0.23.3
+- Repoints download link to our CDN for the CLI for people on 0.23.x who can't upgrade to 0.26.0 or higher immediately.
+
+## v0.23.2
+- Changed the `@available` flags added in 0.23.1 to `#if os(macOS)`, since the former is runtime and the latter is compile time, to work around a bug where SwiftUI compiles the `ApolloCodegenLib` library even if it's not included in the target being previewed. ([#1066](https://github.com/apollographql/apollo-ios/pull/1066))
+- Added support for `omitDeprecatedEnumCases` command line option I missed for `ApolloCodegenOptions` ([#1053](https://github.com/apollographql/apollo-ios/pull/1053))
+
+## v0.23.1
+- Added some `@available` flags to prevent accidental compilation of `ApolloCodegenLib` on platforms other than macOS. ([#1041](https://github.com/apollographql/apollo-ios/pull/1041))
+- Made the `Query` on `GraphQLQueryWatcher` public so it can be referenced. ([#1037](https://github.com/apollographql/apollo-ios/pull/1037))
+
+## v0.23.0
+- **BETA**: Now available, SPM-based code generation, Phase 0 of our transition to Swift Codegen.
+  
+    Note that the underlying codegen is still using `apollo-tooling`, but that will change as we proceed with Phase 1 of the [Swift Codegen Project](https://github.com/apollographql/apollo-ios/projects/2), generating the code in Swift.
+
+    Documentation is available at our [Swift Scripting page](https://www.apollographql.com/docs/ios/swift-scripting/).
+  
+    When this gets to the final version this **will** supersede existing codegen, so please file bugs galore on this so we can get it good to go as quickly as possible. Thank you! ([#940](https://github.com/apollographql/apollo-ios/pull/940), [#1033](https://github.com/apollographql/apollo-ios/pull/1033))\
+
+- Fixed some memory leaks in our internal Promises implementation. ([#1016](https://github.com/apollographql/apollo-ios/pull/1016))
+
+### v0.22.1
+- Repoints download link to our CDN for the CLI for people on 0.22.0 who can't upgrade to 0.26.0 or higher immediately.
+
+### v0.22.0
+- **BREAKING**: Updated CLI to [v2.22.1](https://github.com/apollographql/apollo-tooling/releases/tag/apollo%402.22.1), including a bunch of fixes on the Swift side: 
+    - Marked files which are generated as `@generated`
+    - Added documentation to the constructors of input structs
+    - Added additional type annotations to improve compile times.
+- **BREAKING**: Updated delegate in `HTTPNetworkTransport` to be a `weak var` and to not be passed in as a parameter to the initializer. ([#990](https://github.com/apollographql/apollo-ios/pull/990), [#1002](https://github.com/apollographql/apollo-ios/pull/1002))
+- Added a lock to `InMemoryNormalizedCache` to reduce possible race conditions. ([#552](https://github.com/apollographql/apollo-ios/pull/552))
+- Added the ability to not send duplicates on a websocket. ([#1004](https://github.com/apollographql/apollo-ios/pull/1004))
+- Fixed an issue that could lead to an undefined cache key in the SQLite library. ([#991](https://github.com/apollographql/apollo-ios/pull/991))
+- Fixed an issue where existing fetch operations in a watcher would not be canceled before a new one was started. ([#1012](https://github.com/apollographql/apollo-ios/pull/1012))
+
+### v0.21.1
+- Repoints download link to our CDN for the CLI for people on 0.21.0 who can't upgrade to 0.26.0 or higher immediately.
+
 ### v0.21.0
 - **BREAKING**, but by popular request: Removed the requirement that the `clientName` and `clientVersion` on `NetworkTransport`, and added a default implementation so custom implementations don't need to set these up themselves. ([#954](https://github.com/apollographql/apollo-ios/pull/954))
+
+### v0.20.1
+- Repoints download link to our CDN for the CLI for people on 0.20.0 who can't upgrade to 0.26.0 or higher immediately.
 
 ### v0.20.0
 
 - Fixed a bunch of data races in `ApolloWebSocket`. ([#880](https://github.com/apollographql/apollo-ios/pull/880))
 - Updated `ApolloWebSocket` to depend on `Apollo` in `Package.swift` since there is a dependency there. ([#906](https://github.com/apollographql/apollo-ios/pull/906))
-- **POSSIBLY BREAKING** Updated Swift tools verson in package declaration to 5.1. ([#883](https://github.com/apollographql/apollo-ios/pull/883))
+- **POSSIBLY BREAKING** Updated Swift tools version in package declaration to 5.1. ([#883](https://github.com/apollographql/apollo-ios/pull/883))
+
+### v0.19.1
+- Repoints download link to our CDN for the CLI for people on 0.19.0 who can't upgrade to 0.26.0 or higher immediately.
 
 ### v0.19.0
 - **NEW**: Added a retry delegate to allow retries based on GraphQL errors returned from your server, not just network-level errors. NOTE: Be careful with which errors you retry for - the mere presence of an error doesn't necessarily indicate a full failure since GraphQL queries can return partial results. ([#770](https://github.com/apollographql/apollo-ios/pull/770))
@@ -15,6 +259,9 @@
 - **POSSIBLY BREAKING**: The `NetworkTransport` protocol is now class-bound. If you built your own `NetworkTransport` implementation instead of one of the ones included with the library, this now must be a `class` instead of a `struct`. ([#770](https://github.com/apollographql/apollo-ios/pull/770))
 - **POSSIBLY BREAKING**: Removed an `unzip` method for arrays of arays which we were not using. However, since it was public, we figured we should let you know. ([#872](https://github.com/apollographql/apollo-ios/pull/872))
 - Bumped Starscream dependency to `3.1.1`. ([#873](https://github.com/apollographql/apollo-ios/pull/873))
+
+### v0.18.2
+- Repoints download link to our CDN for the CLI for people on 0.18.x who can't upgrade to 0.26.0 or higher immediately.
 
 ### v0.18.1
 - Removes TSAN from run on schemes to fix Carthage issue. ([#862](https://github.com/apollographql/apollo-ios/pull/862))
@@ -24,7 +271,7 @@
 - **POSSIBLY BREAKING**: Updated CLI to no longer be directly bundled, but to be downloaded if needed. This allows us to avoid bloating the iOS repo with the CLI zip, and to make it easier to test different versions of the CLI in the future. This change should automatically download the updated CLI version for you. 
 
   Note one significant change from prior bundled versions: If you are connected to the internet when you download the iOS dependency through SPM/Carthage/CocoaPods, you will now need to build your target while still connected to the internet in order to download the proper version of the CLI. Once the correct version of the CLI is downloaded, internet access should no longer be necessary to build. If you disconnect from the internet before the correct version downloads, you will not be able to build. ([#855](https://github.com/apollographql/apollo-ios/pull/855))
-- Updated version of CLI to download to `2.21.0`. ([#855](https://github.com/apollographql/apollo-ios/pull/855)) This includes: 
+- Updated version of CLI to download to [`2.21.0`](https://github.com/apollographql/apollo-tooling/releases/tag/apollo%402.21.0). ([#855](https://github.com/apollographql/apollo-ios/pull/855)) This includes: 
     - Ability to have the codegen ignore deprecated enum cases by using the `--omitDeprecatedEnumCases` flag
     - Fix for generating input fields for `null` values
 - Fixes a number of weak references with closures. Note [that this may reveal some places you weren't hanging onto a strong reference to your `ApolloClient` object](https://github.com/apollographql/apollo-ios/pull/854#issuecomment-545673975), which will cause it to get deallocated. ([#854](https://github.com/apollographql/apollo-ios/pull/854))
@@ -83,7 +330,7 @@
 
 - **BREAKING** Updated codegen to use 2.17 of the Apollo CLI. Please see the [full release notes](https://github.com/apollographql/apollo-tooling/blob/master/CHANGELOG.md#apollo2170-apollo-codegen-swift0350) for that version of the CLI, but in short: 
     - Stops force-unwrapping and instead nil-coalesce to `.none` when the thing being unwrapped was a double-optional, which was causing some crashes
-    - Fixes issue where removing redundant modifiers was a little too agressive 
+    - Fixes issue where removing redundant modifiers was a little too aggressive 
     - Fixes escaping for `Self` as a type name
     - Adds `CaseIterable` for all known cases of an enum. If you were adding this yourself previously, you'll have to take it back out.
     - Adds comment with original operation to `operationDefinition`, stripped excess whitespace from actual definition.
@@ -168,7 +415,7 @@
 
 ### v0.9.4
 
-- Updated required version of `apollo-cli` to `1.9`. A nice addition to `1.9.2` is that Swift Enums now conforms to Hashable enabling among other things comparision between fetch objects. ([#578](https://github.com/apollographql/apollo-cli/pull/578))
+- Updated required version of `apollo-cli` to `1.9`. A nice addition to `1.9.2` is that Swift Enums now conforms to Hashable enabling among other things comparison between fetch objects. ([#578](https://github.com/apollographql/apollo-cli/pull/578))
 - Fixed internal bug that caused infinite reconnection cycle when connection is lost. A reconnectionInterval was added as a workaround. ([#368](https://github.com/apollographql/apollo-ios/pull/368))
 - Fixed internal bug that prevents the `wrongType` case being returned by the `JSONDecodingError` implementation of `Matchable`. ([#367](https://github.com/apollographql/apollo-ios/pull/367))
 - Added delegate for WebTransport which can handle connection/reconnection/disconnection events of websocket. ([#379](https://github.com/apollographql/apollo-ios/pull/379))

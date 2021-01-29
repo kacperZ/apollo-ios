@@ -29,7 +29,11 @@ module.exports = {
             'tutorial/tutorial-create-project',
             'tutorial/tutorial-obtain-schema',
             'tutorial/tutorial-execute-query',
-            'tutorial/tutorial-query-ui'
+            'tutorial/tutorial-query-ui',
+            'tutorial/tutorial-pagination',
+            'tutorial/tutorial-detail-view',
+            'tutorial/tutorial-authentication',
+            'tutorial/tutorial-mutations'
           ],
           Usage:[
             'downloading-schema',
@@ -38,7 +42,8 @@ module.exports = {
             'mutations',
             'fragments',
             'caching',
-            'subscriptions'
+            'subscriptions',
+            'swift-scripting'
           ]
         }
       }

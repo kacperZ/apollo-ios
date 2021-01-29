@@ -3,20 +3,40 @@ import Apollo
 import ApolloTestSupport
 @testable import ApolloWebSocket
 import StarWarsAPI
+import Starscream
 
 class StarWarsSubscriptionTests: XCTestCase {
-  let SERVER: String = "ws://localhost:8080/websocket"
   let concurrentQueue = DispatchQueue(label: "com.apollographql.testing", attributes: .concurrent)
   
   var client: ApolloClient!
   var webSocketTransport: WebSocketTransport!
   
+  var connectionStartedExpectation: XCTestExpectation?
+  var disconnectedExpectation: XCTestExpectation?
+  var reconnectedExpectation: XCTestExpectation?
+  
   override func setUp() {
     super.setUp()
     
+    self.connectionStartedExpectation = self.expectation(description: "Web socket connected")
+    
     WebSocketTransport.provider = ApolloWebSocket.self
-    webSocketTransport = WebSocketTransport(request: URLRequest(url: URL(string: SERVER)!))
-    client = ApolloClient(networkTransport: webSocketTransport)
+    webSocketTransport = WebSocketTransport(request: URLRequest(url: TestURL.starWarsWebSocket.url))
+    webSocketTransport.delegate = self
+    client = ApolloClient(networkTransport: webSocketTransport, store: ApolloStore())
+
+    self.wait(for: [self.connectionStartedExpectation!], timeout: 5)
+  }
+  
+  private func waitForSubscriptionsToStart(for delay: TimeInterval = 0.1, on queue: DispatchQueue = .main) {
+    /// This method works around changes to the subscriptions package which mean that subscriptions do not start passing on data the absolute instant they are created.
+    let waitExpectation = self.expectation(description: "Waited!")
+    
+    queue.asyncAfter(deadline: .now() + delay) {
+      waitExpectation.fulfill()
+    }
+    
+    self.wait(for: [waitExpectation], timeout: delay + 1)
   }
   
   // MARK: Subscriptions
@@ -45,6 +65,8 @@ class StarWarsSubscriptionTests: XCTestCase {
       }
     }
     
+    self.waitForSubscriptionsToStart()
+        
     client.perform(mutation: CreateReviewForEpisodeMutation(episode: .jedi, review: ReviewInput(stars: 6, commentary: "This is the greatest movie!")))
     
     waitForExpectations(timeout: 10, handler: nil)
@@ -73,6 +95,8 @@ class StarWarsSubscriptionTests: XCTestCase {
         XCTFail("Unexpected error: \(error)")
       }
     }
+    
+    self.waitForSubscriptionsToStart()
     
     client.perform(mutation: CreateReviewForEpisodeMutation(episode: .empire, review: ReviewInput(stars: 13, commentary: "This is an even greater movie!")))
     
@@ -103,6 +127,8 @@ class StarWarsSubscriptionTests: XCTestCase {
       }
     }
     
+    self.waitForSubscriptionsToStart()
+    
     client.perform(mutation: CreateReviewForEpisodeMutation(episode: .empire, review: ReviewInput(stars: 10, commentary: "This is an even greater movie!")))
     
     waitForExpectations(timeout: 3, handler: nil)
@@ -110,12 +136,14 @@ class StarWarsSubscriptionTests: XCTestCase {
   }
   
   func testSubscribeThenCancel() {
-    let expectation = self.expectation(description: "Subscription then cancel - expecting timeput")
+    let expectation = self.expectation(description: "Subscription then cancel - expecting timeout")
     expectation.isInverted = true
     
     let sub = client.subscribe(subscription: ReviewAddedSubscription(episode: .jedi)) { _ in
       XCTFail("Received subscription after cancel")
     }
+    
+    self.waitForSubscriptionsToStart()
     
     sub.cancel()
     
@@ -147,6 +175,8 @@ class StarWarsSubscriptionTests: XCTestCase {
         XCTFail("Unexpected error: \(error)")
       }
     }
+    
+    self.waitForSubscriptionsToStart()
 
     for i in 1...count {
       let review = ReviewInput(stars: i, commentary: "The greatest movie ever!")
@@ -223,6 +253,8 @@ class StarWarsSubscriptionTests: XCTestCase {
       newHopeFulfilledCount += 1
     }
     
+    self.waitForSubscriptionsToStart()
+    
     let episodes : [Episode] = [.empire, .jedi, .newhope]
     
     var selectedEpisodes = [Episode]()
@@ -280,6 +312,8 @@ class StarWarsSubscriptionTests: XCTestCase {
       }
     }
     
+    self.waitForSubscriptionsToStart(on: concurrentQueue)
+    
     // dispatched with a barrier flag to make sure
     // this is performed after subscription calls
     concurrentQueue.sync(flags: .barrier) {
@@ -310,7 +344,9 @@ class StarWarsSubscriptionTests: XCTestCase {
     let sub2 = client.subscribe(subscription: secondSubscription) { _ in
       invertedExpectation.fulfill()
     }
-        
+    
+    self.waitForSubscriptionsToStart(on: concurrentQueue)
+    
     concurrentQueue.async {
       sub1.cancel()
       expectation.fulfill()
@@ -337,6 +373,8 @@ class StarWarsSubscriptionTests: XCTestCase {
       invertedExpectation.fulfill()
     }
     
+    self.waitForSubscriptionsToStart(on: concurrentQueue)
+    
     concurrentQueue.async {
       sub.cancel()
     }
@@ -354,7 +392,7 @@ class StarWarsSubscriptionTests: XCTestCase {
   
   func testConcurrentConnectAndCloseConnection() {
     WebSocketTransport.provider = MockWebSocket.self
-    let webSocketTransport = WebSocketTransport(request: URLRequest(url: URL(string: SERVER)!))
+    let webSocketTransport = WebSocketTransport(request: URLRequest(url: TestURL.starWarsWebSocket.url))
     let expectation = self.expectation(description: "Connection closed")
     expectation.expectedFulfillmentCount = 2
     
@@ -371,5 +409,89 @@ class StarWarsSubscriptionTests: XCTestCase {
     }
     
     waitForExpectations(timeout: 10, handler: nil)
+  }
+  
+  func testPausingAndResumingWebSocketConnection() {
+    let subscription = ReviewAddedSubscription()
+    let reviewMutation = CreateAwesomeReviewMutation()
+    
+    // Send the mutations via a separate transport so they can still be sent when the websocket is disconnected
+    let store = ApolloStore()
+    let interceptorProvider = LegacyInterceptorProvider(store: store)
+    let alternateTransport = RequestChainNetworkTransport(interceptorProvider: interceptorProvider,
+                                                          endpointURL: TestURL.starWarsServer.url)
+    let alternateClient = ApolloClient(networkTransport: alternateTransport, store: store)
+    
+    func sendReview() {
+      let reviewSentExpectation = self.expectation(description: "review sent")
+      alternateClient.perform(mutation: reviewMutation) { mutationResult in
+        switch mutationResult {
+        case .success:
+          break
+        case .failure(let error):
+          XCTFail("Unexpected error sending review: \(error)")
+        }
+        
+        reviewSentExpectation.fulfill()
+      }
+      self.wait(for: [reviewSentExpectation], timeout: 10)
+    }
+    
+    let subscriptionExpectation = self.expectation(description: "Received review")
+    // This should get hit twice - once before we pause the web socket and once after.
+    subscriptionExpectation.expectedFulfillmentCount = 2
+    let reviewAddedSubscription = self.client.subscribe(subscription: subscription) { subscriptionResult in
+      switch subscriptionResult {
+      case .success(let graphQLResult):
+        XCTAssertEqual(graphQLResult.data?.reviewAdded?.episode, .jedi)
+        subscriptionExpectation.fulfill()
+      case .failure(let error):
+        if let wsError = error as? Starscream.WSError {
+          // This is an expected error on disconnection, ignore it.
+          XCTAssertEqual(wsError.code, 1000)
+        } else {
+          XCTFail("Unexpected error receiving subscription: \(error)")
+          subscriptionExpectation.fulfill()
+        }
+      }
+    }
+    
+    self.waitForSubscriptionsToStart()
+    sendReview()
+    
+    self.disconnectedExpectation = self.expectation(description: "Web socket disconnected")
+    webSocketTransport.pauseWebSocketConnection()
+    self.wait(for: [self.disconnectedExpectation!], timeout: 10)
+
+    // This should not go through since the socket is paused
+    sendReview()
+
+    self.reconnectedExpectation = self.expectation(description: "Web socket reconnected")
+    webSocketTransport.resumeWebSocketConnection()
+    self.wait(for: [self.reconnectedExpectation!], timeout: 10)
+    self.waitForSubscriptionsToStart()
+
+    // Now that we've reconnected, this should go through to the same subscription.
+    sendReview()
+    
+    self.wait(for: [subscriptionExpectation], timeout: 10)
+
+    // Cancel subscription so it doesn't keep receiving from other tests.
+    reviewAddedSubscription.cancel()    
+  }
+}
+
+extension StarWarsSubscriptionTests: WebSocketTransportDelegate {
+  
+  func webSocketTransportDidConnect(_ webSocketTransport: WebSocketTransport) {
+    self.connectionStartedExpectation?.fulfill()
+  }
+  
+  func webSocketTransportDidReconnect(_ webSocketTransport: WebSocketTransport) {
+    self.reconnectedExpectation?.fulfill()
+  }
+  
+  func webSocketTransport(_ webSocketTransport: WebSocketTransport, didDisconnectWithError error: Error?) {
+    self.disconnectedExpectation?.fulfill()
   }
 }

@@ -6,7 +6,7 @@
 public struct RecordSet
 ```
 
-> A set of cache records.
+A set of cache records.
 
 ## Properties
 ### `storage`
@@ -24,7 +24,7 @@ public var isEmpty: Bool
 ### `keys`
 
 ```swift
-public var keys: [CacheKey]
+public var keys: Set<CacheKey>
 ```
 
 ## Methods
@@ -38,6 +38,12 @@ public init<S: Sequence>(records: S) where S.Iterator.Element == Record
 
 ```swift
 public mutating func insert(_ record: Record)
+```
+
+### `removeRecord(for:)`
+
+```swift
+public mutating func removeRecord(for key: CacheKey)
 ```
 
 ### `clear()`

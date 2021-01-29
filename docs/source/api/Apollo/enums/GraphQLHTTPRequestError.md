@@ -6,15 +6,9 @@
 public enum GraphQLHTTPRequestError: Error, LocalizedError
 ```
 
-> An error which has occurred during the serialization of a request.
+An error which has occurred during the serialization of a request.
 
 ## Cases
-### `cancelledByDelegate`
-
-```swift
-case cancelledByDelegate
-```
-
 ### `serializedBodyMessageError`
 
 ```swift

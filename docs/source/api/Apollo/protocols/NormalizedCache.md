@@ -7,62 +7,71 @@ public protocol NormalizedCache
 ```
 
 ## Methods
-### `loadRecords(forKeys:callbackQueue:completion:)`
+### `loadRecords(forKeys:)`
 
 ```swift
-func loadRecords(forKeys keys: [CacheKey],
+func loadRecords(forKeys keys: Set<CacheKey>) throws -> [CacheKey: Record]
 ```
 
-> Loads records corresponding to the given keys.
->
-> - Parameters:
->   - keys: The cache keys to load data for
->   - callbackQueue: [optional] An alternate queue to fire the completion closure on. If nil, will fire on the current queue.
->   - completion: A completion closure to fire when the load has completed. If successful, will contain an array. Each index will contain either the record corresponding to the key at the same index in the passed-in array of cache keys, or nil if that record was not found.
+Loads records corresponding to the given keys.
+
+- Parameters:
+  - key: The cache keys to load data for
+- Returns: A dictionary of cache keys to records containing the records that have been found.
 
 #### Parameters
 
 | Name | Description |
 | ---- | ----------- |
-| keys | The cache keys to load data for |
-| callbackQueue | [optional] An alternate queue to fire the completion closure on. If nil, will fire on the current queue. |
-| completion | A completion closure to fire when the load has completed. If successful, will contain an array. Each index will contain either the record corresponding to the key at the same index in the passed-in array of cache keys, or nil if that record was not found. |
+| key | The cache keys to load data for |
 
-### `merge(records:callbackQueue:completion:)`
+### `merge(records:)`
 
 ```swift
-func merge(records: RecordSet,
+func merge(records: RecordSet) throws -> Set<CacheKey>
 ```
 
-> Merges a set of records into the cache.
->
-> - Parameters:
->   - records: The set of records to merge.
->   - callbackQueue: [optional] An alternate queue to fire the completion closure on. If nil, will fire on the current queue.
->   - completion: A completion closure to fire when the merge has completed. If successful, will contain a set of keys corresponding to *fields* that have changed (i.e. QUERY_ROOT.Foo.myField). These are the same type of keys as are returned by RecordSet.merge(records:).
+Merges a set of records into the cache.
+
+- Parameters:
+  - records: The set of records to merge.
+- Returns: A set of keys corresponding to *fields* that have changed (i.e. QUERY_ROOT.Foo.myField). These are the same type of keys as are returned by RecordSet.merge(records:).
 
 #### Parameters
 
 | Name | Description |
 | ---- | ----------- |
 | records | The set of records to merge. |
-| callbackQueue | [optional] An alternate queue to fire the completion closure on. If nil, will fire on the current queue. |
-| completion | A completion closure to fire when the merge has completed. If successful, will contain a set of keys corresponding to  that have changed (i.e. QUERY_ROOT.Foo.myField). These are the same type of keys as are returned by RecordSet.merge(records:). |
 
-### `clear(callbackQueue:completion:)`
+### `removeRecord(for:)`
 
 ```swift
-func clear(callbackQueue: DispatchQueue?,
+func removeRecord(for key: CacheKey) throws
 ```
 
->
-> - Parameters:
->   - callbackQueue: [optional] An alternate queue to fire the completion closure on. If nil, will fire on the current queue.
->   - completion: [optional] A completion closure to fire when the clear function has completed.
+Removes a record for the specified key. This method will only
+remove whole records, not individual fields.
+
+If you attempt to pass a cache key for a  single field, this
+method will do nothing since it won't be able to locate a
+record to remove based on that key.
+
+This method does not support cascading delete - it will only
+remove the record for the specified key, and not any references to it or from it.
+
+- Parameters:
+  - key: The cache key to remove the record for
 
 #### Parameters
 
 | Name | Description |
 | ---- | ----------- |
-| callbackQueue | [optional] An alternate queue to fire the completion closure on. If nil, will fire on the current queue. |
-| completion | [optional] A completion closure to fire when the clear function has completed. |
+| key | The cache key to remove the record for |
+
+### `clear()`
+
+```swift
+func clear() throws
+```
+
+Clears all records.
