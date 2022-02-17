@@ -14,6 +14,14 @@ public struct RecordSet {
     storage.removeValue(forKey: key)
   }
 
+  public mutating func removeRecords(matching pattern: CacheKey) {
+    for (key, _) in storage {
+      if key.range(of: pattern, options: .caseInsensitive) != nil {
+        storage.removeValue(forKey: key)
+      }
+    }
+  }
+
   public mutating func clear() {
     storage.removeAll()
   }
@@ -51,7 +59,7 @@ public struct RecordSet {
       var changedKeys: Set<CacheKey> = Set()
 
       for (key, value) in record.fields {
-        if let oldValue = oldRecord.fields[key], equals(oldValue, value) {
+        if let oldValue = oldRecord.fields[key], JSONValueMatcher.equals(oldValue, value) {
           continue
         }
         oldRecord[key] = value

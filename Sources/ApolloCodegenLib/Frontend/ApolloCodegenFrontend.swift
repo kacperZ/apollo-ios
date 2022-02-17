@@ -2,8 +2,16 @@ import Foundation
 import JavaScriptCore
 
 public final class ApolloCodegenFrontend {
-  static let bundle = Bundle(for: ApolloCodegenFrontend.self)
-  private static let libraryURL = bundle.url(forResource: "ApolloCodegenFrontend.bundle", withExtension: "js")!
+  #if SWIFT_PACKAGE
+  private static let bundle = Bundle.module
+  private static let libraryURL = bundle.url(forResource: "ApolloCodegenFrontend.bundle",
+                                             withExtension: "js")!
+  #else
+  private static let bundle = Bundle(for: ApolloCodegenFrontend.self)
+  private static let libraryURL = bundle.url(forResource: "ApolloCodegenFrontend.bundle",
+                                             withExtension: "js",
+                                             subdirectory: "dist")!
+  #endif
   private static let librarySource = try! String.init(contentsOf: libraryURL)
   
   private let virtualMachine = JSVirtualMachine()
@@ -60,6 +68,11 @@ public final class ApolloCodegenFrontend {
   public func loadSchemaFromSDL(_ source: GraphQLSource) throws -> GraphQLSchema {
     return try library.call("loadSchemaFromSDL", with: source)
   }
+  
+  /// Take a loaded GQL schema and print it as SDL.
+  public func printSchemaAsSDL(schema: GraphQLSchema) throws -> String {
+      return try library.call("printSchemaToSDL", with: schema)
+    }
   
   private lazy var sourceConstructor: JavaScriptObject = bridge.fromJSValue(library["Source"])
   

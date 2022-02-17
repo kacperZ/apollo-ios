@@ -4,7 +4,6 @@ import ArgumentParser
 
 enum Target {
     case starWars
-    case starWarsSwiftCodegen
     case gitHub
     case upload
     
@@ -12,8 +11,6 @@ enum Target {
         switch name {
         case "StarWars":
             self = .starWars
-        case "StarWars-SwiftCodegen":
-            self = .starWarsSwiftCodegen
         case "GitHub":
             self = .gitHub
         case "Upload":
@@ -29,8 +26,7 @@ enum Target {
             return sourceRootURL
                 .apollo.childFolderURL(folderName: "Sources")
                 .apollo.childFolderURL(folderName: "GitHubAPI")
-        case .starWars,
-             .starWarsSwiftCodegen:
+        case .starWars:
             return sourceRootURL
                 .apollo.childFolderURL(folderName: "Sources")
                 .apollo.childFolderURL(folderName: "StarWarsAPI")
@@ -62,16 +58,6 @@ enum Target {
             
             return ApolloCodegenOptions(operationIDsURL: operationIDsURL,
                                         outputFormat: .singleFile(atFileURL: outputFileURL),
-                                        urlToSchemaFile: schema)
-        case .starWarsSwiftCodegen:
-            let graphQLFolderURL = targetRootURL.apollo.childFolderURL(folderName: "graphql")
-            let jsonOutputFileURL = try! graphQLFolderURL.apollo.childFileURL(fileName: "API.json")
-            let operationIDsURL = try! graphQLFolderURL.apollo.childFileURL(fileName: "operationIDs.json")
-            let schema = try! graphQLFolderURL.apollo.childFileURL(fileName: "schema.json")
-            
-            return ApolloCodegenOptions(codegenEngine: .swiftExperimental,
-                                        operationIDsURL: operationIDsURL,
-                                        outputFormat: .singleFile(atFileURL: jsonOutputFileURL),
                                         urlToSchemaFile: schema)
         case .gitHub:
             let outputFileURL = try!  targetRootURL.apollo.childFileURL(fileName: "API.swift")

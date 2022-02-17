@@ -48,22 +48,22 @@ When you unzip the downloaded repo, you'll see that there's a folder called **`A
 If you're using the default target structure for an Xcode project, your project's file structure will look essentially like this in Finder: 
 
 ```txt:title=Sample%20Project%20Structure
-MyProject // Source root
-  | MyProject.xcodeproj
-  | - MyProject // Contains app target source files
-  | - MyLibraryTarget // Contains lib target source files
-  | - MyProjectTests // Contains test files
+MyProject                  // Source root
+├─ MyProject.xcodeproj
+├─ MyProject/              // Contains app target source files
+├─ MyLibraryTarget/        // Contains lib target source files
+├─ MyProjectTests/         // Contains test files
 ```
 
-Drag the `ApolloCodegen` folder in at the same level as your other targets (in Finder, not in Xcode): 
+Drag the `ApolloCodegen` folder in **at the same level as your other targets** (in Finder, not in Xcode): 
 
 ```txt:title=Sample%20Project%20Structure
-MyProject // Source root
-  | MyProject.xcodeproj
-  | - MyProject // Contains app target source files
-  | - MyLibraryTarget // Contains lib target source files
-  | - MyProjectTests // Contains test files
-  | - ApolloCodegen // Contains the swift scripting files you just downloaded and dragged in
+MyProject                  // Source root
+├─ MyProject.xcodeproj
+├─ MyProject/              // Contains app target source files
+├─ MyLibraryTarget/        // Contains lib target source files
+├─ MyProjectTests/         // Contains test files
+├─ ApolloCodegen/          // Contains the swift scripting files you just downloaded and dragged in
 ```
 
 Double-click `Package.swift` in the `ApolloCodegen` folder to open the executable's package in Xcode. 
@@ -73,8 +73,10 @@ Double-click `Package.swift` in the `ApolloCodegen` folder to open the executabl
 ```swift:title=Package.swift
 .package(name: "Apollo",
          url: "https://github.com/apollographql/apollo-ios.git", 
-         .upToNextMinor(from: "0.40.0"))
+         .upToNextMinor(from: "0.49.0"))
 ```
+
+Note that these instructions are updated along with newer versions of the library - if you're seeing something that doesn't compile, please check that you're on the most recent version of the SDK both in your app and in your Codegen project. 
 
 ## A Tour Of The Template Project
 
@@ -104,10 +106,10 @@ There are sub-commands to run specific tasks - these are most often what you'll 
 
 This command will download a GraphQL schema. There are two pieces you definitely need to fill in: 
 
-- The placeholder for the URL to download your schema from. This can either be your GraphQL endpoint or, if you've got it set up, Apollo Studio. 
+- The place you want to download your schema from. This is usually via introspection of your GraphQL endpoint, so the default is set to use this, you just need to replace the `localhost` URL with the URL of your GraphQL endpoint. If you've got it set up, you can also download your schema from the Apollo Schema Registry. You'll need to add your API Key and Graph ID for this, which you can get from Apollo Studio. 
 - The name of the folder where you want the schema downloaded. If you've followed the template above, you'll want to place the schema in the folder where your target's code lives. 
 
-You can also use [options provided by the `ApolloSchemaOptions` object](https://www.apollographql.com/docs/ios/api/ApolloCodegenLib/structs/ApolloSchemaOptions/) to further configure how and where you want to download your schema. 
+You can also use [options provided by the `ApolloSchemaDownloadConfiguration` object](https://www.apollographql.com/docs/ios/api/ApolloCodegenLib/structs/ApolloSchemaDownloadConfiguration/) to further configure how and where you want to download your schema. 
 
 #### GenerateCode
 
@@ -129,7 +131,7 @@ If you don't provide a subcommand, a list of available subcommands will be print
 
 ### Downloading a schema
 
-Update the `downloadSchema` command to have the correct URL and download path within the Swift file. Then, from the command line, run: 
+Update the `downloadSchema` command to have the correct download method and download path within the Swift file. Then, from the command line, run: 
 
 ```
 swift run ApolloCodegen downloadSchema
@@ -138,13 +140,13 @@ swift run ApolloCodegen downloadSchema
 If you're using the template code and following the sample project structure, the schema should download here: 
 
 ```txt:title=Sample%20Project%20Structure
-MyProject // SourceRoot
-  | MyProject.xcodeproj
-  | - MyProject // Contains app target source files
-       | schema.json // <-- downloaded schema
-  | - MyLibraryTarget // Contains lib target source files
-  | - MyProjectTests // Contains test files
-  | - ApolloCodegen // Contains Swift Scripting files
+MyProject                  // SourceRoot
+├─ MyProject.xcodeproj
+├─ MyProject/              // Contains app target source files
+│  └─ schema.graphqls
+├─ MyLibraryTarget/        // Contains lib target source files
+├─ MyProjectTests/         // Contains test files
+├─ ApolloCodegen/          // Contains Swift Scripting files
 ```
 
 Next, now that you have a schema, you need a GraphQL file with an operation in order to generate code. 
@@ -153,17 +155,17 @@ Next, now that you have a schema, you need a GraphQL file with an operation in o
 
 If you're not familiar with creating an operation in graphQL, please check out the [portion of our tutorial on executing your first query](https://www.apollographql.com/docs/ios/tutorial/tutorial-execute-query/). You can stop after the section about adding your query to Xcode.
 
-Make sure you've added the operation file to the project files, ideally at or above the level of the `schema.json` (Otherwise, you'll need to manually pass the URL of your GraphQL files to your code generation step):
+Make sure you've added the operation file to the project files, ideally at or above the level of the `schema.graphqls` (Otherwise, you'll need to manually pass the URL of your operation file to your code generation step):
 
 ```txt:title=Sample%20Project%20Structure
-MyProject // SourceRoot
-  | MyProject.xcodeproj
-  | - MyProject // Contains app target source files
-       | schema.json
-       | LaunchList.graphql
-  | - MyLibraryTarget // Contains lib target source files
-  | - MyProjectTests // Contains test files
-  | - ApolloCodegen // Contains Swift Scripting files
+MyProject                  // SourceRoot
+├─ MyProject.xcodeproj
+├─ MyProject/              // Contains app target source files
+│  ├─ schema.graphqls
+│  └─ LaunchList.graphql
+├─ MyLibraryTarget/        // Contains lib target source files
+├─ MyProjectTests/         // Contains test files
+├─ ApolloCodegen/          // Contains Swift Scripting files
 ```
 
 Here, for example, is what this looks like in a file for one of the queries in our [tutorial application](./tutorial/tutorial-introduction):
@@ -186,6 +188,9 @@ This is best achieved with a Run Script Build Phase.
 3. Update the build phase run script to `cd` into the folder where your executable's code lives, then run `swift run` (using `xcrun` so that you can ensure it runs with the correct SDK, no matter what type of project you're building): 
 
     ```
+    # Don't run this during index builds
+    if [ $ACTION = "indexbuild" ]; then exit 0; fi
+
     cd "${SRCROOT}"/ApolloCodegen
     xcrun -sdk macosx swift run ApolloCodegen generate
     ```

@@ -1,5 +1,6 @@
 import XCTest
 import ApolloTestSupport
+import ApolloCodegenTestSupport
 @testable import ApolloCodegenLib
 
 class DocumentParsingAndValidationTests: XCTestCase {
@@ -15,6 +16,13 @@ class DocumentParsingAndValidationTests: XCTestCase {
     let introspectionResult = try String(contentsOf: XCTUnwrap(starWarsAPIBundle.url(forResource: "schema", withExtension: "json")))
         
     schema = try codegenFrontend.loadSchemaFromIntrospectionResult(introspectionResult)
+  }
+
+  override func tearDown() {
+    codegenFrontend = nil
+    schema = nil
+
+    super.tearDown()
   }
   
   func testParseDocument() throws {

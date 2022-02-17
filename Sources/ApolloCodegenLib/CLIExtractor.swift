@@ -25,7 +25,7 @@ struct CLIExtractor {
     }
   }
   
-  static let expectedSHASUM = "ff50f341f09fe7ef8e125412fb14f0f3359ac0adfb7864cf2a9c8a99d5a7e6e5"
+  static let expectedSHASUM = "cb73089deb2a720a7d2f5a39ad449e1cfbdc22771130cd6e2a405aaa887c343e"
   
   /// Checks to see if the CLI has already been extracted and is the correct version, and extracts or re-extracts as necessary
   ///
@@ -70,11 +70,11 @@ struct CLIExtractor {
     }
     
     let contents = try String(contentsOf: shasumFileURL, encoding: .utf8)
-    
+
     guard contents == expected else {
       return contents.hasPrefix(expected)
     }
-    
+
     return true
   }
   
@@ -100,7 +100,7 @@ struct CLIExtractor {
   static func writeSHASUMToFile(apolloFolderURL: URL) throws {
     let shasumFileURL = ApolloFilePathHelper.shasumFileURL(fromApollo: apolloFolderURL)
     try CLIExtractor.expectedSHASUM.write(to: shasumFileURL,
-                                          atomically: false,
+                                          atomically: true,
                                           encoding: .utf8)
   }
   
@@ -116,7 +116,7 @@ struct CLIExtractor {
     
     CodegenLogger.log("Extracting CLI from zip file. This may take a second...")
     _ = try Basher.run(command: "tar xzf '\(zipFileURL.path)' -C '\(cliFolderURL.path)'", from: nil)
-    
+
     let apolloFolderURL = ApolloFilePathHelper.apolloFolderURL(fromCLIFolder: cliFolderURL)
     let binaryFolderURL = ApolloFilePathHelper.binaryFolderURL(fromApollo: apolloFolderURL)
     

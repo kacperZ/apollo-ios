@@ -7,6 +7,7 @@
 //
 
 import XCTest
+import ApolloCodegenTestSupport
 @testable import ApolloCodegenLib
 
 class ApolloCodegenTests: XCTestCase {
@@ -66,7 +67,7 @@ class ApolloCodegenTests: XCTestCase {
     let namespace = "ANameSpace"
     let prefix = "MyPrefix"
     
-    let options = ApolloCodegenOptions(codegenEngine: .swiftExperimental,
+    let options = ApolloCodegenOptions(codegenEngine: .typescript,
                                        includes: "*.graphql",
                                        mergeInFieldsFromFragmentSpreads: false,
                                        modifier: .internal,
@@ -96,7 +97,7 @@ class ApolloCodegenTests: XCTestCase {
     
     XCTAssertEqual(options.arguments, [
       "codegen:generate",
-      "--target=json-modern",
+      "--target=swift",
       "--addTypename",
       "--includes='*.graphql'",
       "--localSchemaFile='\(schema.path)'",

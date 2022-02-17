@@ -1,5 +1,6 @@
 import XCTest
 import ApolloTestSupport
+import ApolloCodegenTestSupport
 @testable import ApolloCodegenLib
 
 class SchemaLoadingTests: XCTestCase {
@@ -10,6 +11,12 @@ class SchemaLoadingTests: XCTestCase {
     try super.setUpWithError()
 
     codegenFrontend = try ApolloCodegenFrontend()
+  }
+
+  override func tearDown() {
+    codegenFrontend = nil
+
+    super.tearDown()
   }
   
   func testParseSchemaFromIntrospectionResult() throws {
